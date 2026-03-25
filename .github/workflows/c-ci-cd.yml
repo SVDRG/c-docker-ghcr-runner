@@ -12,7 +12,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ghcr.io/${{ toLower(github.repository_owner) }}/c-docker-ghcr-runner
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/c-docker-ghcr-runner
 
 jobs:
   build-test-push-deploy:
@@ -36,7 +36,8 @@ jobs:
       - name: 4. Build Docker image
         shell: powershell
         run: |
-          docker build -t "${env:IMAGE_NAME}:latest" .
+          $LOWER_IMAGE_NAME = "${{ env.IMAGE_NAME }}".ToLower()
+          docker build -t "$LOWER_IMAGE_NAME:latest" .
 
       - name: 5. Run container test
         shell: powershell
