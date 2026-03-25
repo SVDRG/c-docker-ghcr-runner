@@ -45,10 +45,25 @@ jobs:
       - name: 5. Run container test
         shell: powershell
         run: |
-          docker rm -f c-test-container 2>$null
-          docker run --name c-test-container "${env:IMAGE_NAME}:latest" > output.txt
+          # 1. 기존 컨테이너 삭제 (에러가 나도 무시하고 진행)
+          docker rm -f c-test-container 2>$null | Out-Null
+
+          # 2. 이미지 이름을 소문자로 변환
+          $LOWER_IMAGE = "${{ env.IMAGE_NAME }}".ToLower()
+
+          # 3. 컨테이너 실행 및 결과 저장
+          docker run --name c-test-container "${LOWER_IMAGE}:latest" > output.txt
+
+          # 4. 결과 출력 및 검증
           Get-Content output.txt
-          Select-String -Path output.txt -Pattern "sum = 30"
+          if (Select-String -Path output.txt -Pattern "sum = 30") {
+              Write-Host "Test Passed!"
+          } else {
+              Write-Error "Test Failed: Pattern 'sum = 30' not found."
+              exit 1
+          }
+
+          # 5. 컨테이너 정리
           docker rm -f c-test-container
 
       - name: 6. Push image to GHCR
