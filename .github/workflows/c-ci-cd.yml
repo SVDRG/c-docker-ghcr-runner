@@ -36,8 +36,11 @@ jobs:
       - name: 4. Build Docker image
         shell: powershell
         run: |
-          $LOWER_IMAGE_NAME = "${{ env.IMAGE_NAME }}".ToLower()
-          docker build -t "$LOWER_IMAGE_NAME:latest" .
+          # 1. 소문자로 변환하여 환경 변수에 저장
+          $LOWER_NAME = "${{ env.IMAGE_NAME }}".ToLower()
+          
+          # 2. 빌드 실행 (변수 앞에 $를 붙여 사용)
+          docker build -t "${LOWER_NAME}:latest" 
 
       - name: 5. Run container test
         shell: powershell
