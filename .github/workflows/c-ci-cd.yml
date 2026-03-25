@@ -82,9 +82,9 @@ jobs:
       - name: 7. Deploy with Docker Compose
         shell: powershell
         run: |
-          docker compose down
+          docker compose down --remove-orphans
           docker compose pull
-          docker compose up -d
+          docker compose up -d --force-recreate
 
       - name: 8. Verify running container
         shell: powershell
