@@ -73,7 +73,11 @@ jobs:
       - name: 6. Push image to GHCR
         shell: powershell
         run: |
-          docker push "${env:IMAGE_NAME}:latest"
+          # 소문자로 변환된 변수 생성
+          $LOWER_IMAGE = "${{ env.IMAGE_NAME }}".ToLower()
+          
+          # 변환된 변수로 푸시
+          docker push "${LOWER_IMAGE}:latest"
 
       - name: 7. Deploy with Docker Compose
         shell: powershell
