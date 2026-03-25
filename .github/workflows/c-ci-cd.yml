@@ -12,7 +12,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  # IMAGE_NAME을 여기서 바로 정의하지 않고, 아래 Job의 Step에서 소문자로 변환하여 사용합니다.
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/c-docker-ghcr-runner
 
 jobs:
   build-test-push-deploy:
@@ -22,54 +22,44 @@ jobs:
       - name: 1. Checkout source
         uses: actions/checkout@v4
 
-      # [중요] 여기서 대문자가 포함된 ID를 소문자로 변환하여 환경 변수에 저장합니다.
-      - name: 2. Set Case-insensitive Image Name
-        shell: powershell
-        run: |
-          $owner = "${{ github.repository_owner }}".ToLower()
-          $image_path = "ghcr.io/$owner/c-docker-ghcr-runner"
-          echo "IMAGE_NAME=$image_path" >> $env:GITHUB_ENV
-
-      - name: 3. Show Docker version
+      - name: 2. Show Docker version
         shell: powershell
         run: docker version
+
+      - name: 3. Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 4. Build Docker image
         shell: powershell
         run: |
-          # 변수명을 { }로 감싸서 :latest와 확실히 분리합니다.
-          docker build -t "${env:IMAGE_NAME}:latest" .
-
-      - name: 5. Build Docker image
-        shell: powershell
-        run: |
           docker build -t $env:IMAGE_NAME:latest .
 
-      - name: 6. Run container test
+      - name: 5. Run container test
         shell: powershell
         run: |
           docker rm -f c-test-container 2>$null
-          # 여기도 마찬가지로 수정
-          docker run --name c-test-container "${env:IMAGE_NAME}:latest" > output.txt
+          docker run --name c-test-container $env:IMAGE_NAME:latest > output.txt
           Get-Content output.txt
           Select-String -Path output.txt -Pattern "sum = 30"
           docker rm -f c-test-container
 
-      - name: 7. Push image to GHCR
+      - name: 6. Push image to GHCR
         shell: powershell
         run: |
-          # 여기도 마찬가지로 수정
-          docker push "${env:IMAGE_NAME}:latest"
+          docker push $env:IMAGE_NAME:latest
 
-      - name: 8. Deploy with Docker Compose
+      - name: 7. Deploy with Docker Compose
         shell: powershell
         run: |
           docker compose down
           docker compose pull
           docker compose up -d
 
-      - name: 9. Verify running container
+      - name: 8. Verify running container
         shell: powershell
         run: docker ps
-
 
