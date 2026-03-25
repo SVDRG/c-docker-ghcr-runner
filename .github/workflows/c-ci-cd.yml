@@ -40,7 +40,7 @@ jobs:
           $LOWER_NAME = "${{ env.IMAGE_NAME }}".ToLower()
           
           # 2. 빌드 실행 (변수 앞에 $를 붙여 사용)
-          docker build -t "${LOWER_NAME}:latest" 
+          docker build -t "${LOWER_NAME}:latest" .
 
       - name: 5. Run container test
         shell: powershell
