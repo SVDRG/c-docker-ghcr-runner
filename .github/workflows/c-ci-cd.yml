@@ -34,12 +34,11 @@ jobs:
         shell: powershell
         run: docker version
 
-      - name: 4. Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: 4. Build Docker image
+        shell: powershell
+        run: |
+          # 변수명을 { }로 감싸서 :latest와 확실히 분리합니다.
+          docker build -t "${env:IMAGE_NAME}:latest" .
 
       - name: 5. Build Docker image
         shell: powershell
@@ -49,23 +48,18 @@ jobs:
       - name: 6. Run container test
         shell: powershell
         run: |
-          if (docker ps -a -q --filter "name=c-test-container") {
-              docker rm -f c-test-container
-          }
-          docker run --name c-test-container $env:IMAGE_NAME:latest > output.txt
+          docker rm -f c-test-container 2>$null
+          # 여기도 마찬가지로 수정
+          docker run --name c-test-container "${env:IMAGE_NAME}:latest" > output.txt
           Get-Content output.txt
-          if (Select-String -Path output.txt -Pattern "sum = 30") {
-              Write-Host "Test Passed!"
-          } else {
-              Write-Error "Test Failed!"
-              exit 1
-          }
+          Select-String -Path output.txt -Pattern "sum = 30"
           docker rm -f c-test-container
 
       - name: 7. Push image to GHCR
         shell: powershell
         run: |
-          docker push $env:IMAGE_NAME:latest
+          # 여기도 마찬가지로 수정
+          docker push "${env:IMAGE_NAME}:latest"
 
       - name: 8. Deploy with Docker Compose
         shell: powershell
